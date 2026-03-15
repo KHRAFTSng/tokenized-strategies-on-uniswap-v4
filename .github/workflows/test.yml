@@ -1,16 +1,16 @@
-name: Test Suite
+name: CI
 
 on:
   workflow_dispatch:
-  # push:
-  # pull_request:
+  push:
+  pull_request:
 
 env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  test:
-    name: Foundry Project
+  solidity:
+    name: Foundry
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +22,37 @@ jobs:
         with:
           version: stable
 
-      - name: Build
+      - name: Bootstrap
+        run: bash scripts/bootstrap.sh
+
+      - name: Build Contracts
         run: |
           forge --version
           forge build --sizes
-        id: build
 
-      - name: Test
-        run: |
-          forge test -vvv
-        id: test
+      - name: Tests
+        run: forge test -vv
+
+      - name: Coverage
+        run: forge coverage --report summary
+
+      - name: Verify Dependencies
+        run: bash scripts/verify_deps.sh
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm --workspace frontend run build
