@@ -7,3 +7,9 @@
 [submodule "lib/hookmate"]
 	path = lib/hookmate
 	url = https://github.com/akshatmittal/hookmate
+[submodule "context/unchain"]
+	path = context/unchain
+	url = https://github.com/unchain-app/readthedocs.git
+[submodule "context/uniswap-docs"]
+	path = context/uniswap-docs
+	url = https://github.com/Uniswap/docs.git
