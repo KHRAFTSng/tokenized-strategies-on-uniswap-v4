@@ -1,0 +1,17 @@
+{
+  "name": "tokenized-strategies-on-uniswap-v4",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "bootstrap": "bash scripts/bootstrap.sh",
+    "build": "forge build && npm --workspace frontend run build",
+    "test": "forge test",
+    "coverage": "forge coverage",
+    "verify:deps": "bash scripts/verify_deps.sh",
+    "verify:commits": "bash scripts/verify_commits.sh 78",
+    "export:abis": "bash scripts/export_abis.sh"
+  }
+}
