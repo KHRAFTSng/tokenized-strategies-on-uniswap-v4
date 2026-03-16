@@ -274,14 +274,14 @@ max_borrow=int("$(cast to-dec "$MAX_BORROW_RAW")")
 print((max_borrow * 90) // 100)
 PY
 )"
-if [[ "$BORROW_AMOUNT" -gt 0 ]]; then
+if [[ "$BORROW_AMOUNT" != "0" ]]; then
   send_tx "lending_borrow" "$LENDING_ADDRESS" "borrow(uint256)" "$BORROW_AMOUNT"
 
   DEBT_TOKEN_ADDRESS="$(call_value "$LENDING_ADDRESS" "debtToken()(address)")"
   send_tx "approve_lending_repay" "$DEBT_TOKEN_ADDRESS" "approve(address,uint256)" "$LENDING_ADDRESS" "$MAX_UINT"
   send_tx "lending_repay" "$LENDING_ADDRESS" "repay(uint256)" "$BORROW_AMOUNT"
 else
-  echo "lending_borrow: skipped (maxBorrow=0)"
+  echo "lending_borrow: skipped (maxBorrow=${MAX_BORROW_DEC})"
 fi
 send_tx "lending_withdraw_collateral" "$LENDING_ADDRESS" "withdrawCollateral(uint256)" "$LENDING_COLLATERAL_AMOUNT"
 
