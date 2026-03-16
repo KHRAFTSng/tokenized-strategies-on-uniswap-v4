@@ -120,6 +120,7 @@ make demo-testnet
 - all deployment tx hashes + explorer URLs
 - user-flow tx hashes + explorer URLs
 - judge summary (deposit, shares, share price before/after, redeem amount, secondary trade, borrow/repay)
+- automatic reuse of existing deployed addresses in `.env` (redeploy only when missing)
 
 ## Security Notes
 - Hook entrypoints are restricted by `onlyPoolManager`.
