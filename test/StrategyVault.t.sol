@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {StrategyVault} from "src/StrategyVault.sol";
 import {YieldToken} from "src/YieldToken.sol";
@@ -60,6 +61,36 @@ contract StrategyVaultTest is Test {
         vault.deposit(0, alice);
     }
 
+    function test_RevertWhen_InvalidConstructorInputs() external {
+        vm.expectRevert(StrategyVault.StrategyVault__ZeroAddress.selector);
+        new StrategyVault(owner, IERC20(address(0)), "Yield Asset", "yAST", 100);
+
+        vm.expectRevert(StrategyVault.StrategyVault__InvalidRebateBps.selector);
+        new StrategyVault(owner, asset, "Yield Asset", "yAST", 2_001);
+    }
+
+    function test_RevertWhen_RedeemZero() external {
+        vm.prank(alice);
+        vm.expectRevert(StrategyVault.StrategyVault__AmountZero.selector);
+        vault.redeem(0, alice);
+    }
+
+    function test_RevertWhen_ReportAmmFeeYieldZero() external {
+        vm.prank(owner);
+        vm.expectRevert(StrategyVault.StrategyVault__AmountZero.selector);
+        vault.reportAmmFeeYield(0);
+    }
+
+    function test_RevertWhen_FundRebateReserveZero() external {
+        vm.prank(owner);
+        vm.expectRevert(StrategyVault.StrategyVault__AmountZero.selector);
+        vault.fundRebateReserve(0);
+    }
+
+    function test_ApplyDeterministicYieldZeroWhenNoPendingOrReserve() external {
+        assertEq(vault.applyDeterministicYield(type(uint256).max), 0);
+    }
+
     function test_DonationAttackDoesNotAffectShareMinting() external {
         vm.prank(alice);
         uint256 firstShares = vault.deposit(1_000e18, alice);
@@ -86,6 +117,14 @@ contract StrategyVaultTest is Test {
         assertGt(shares, 0);
     }
 
+    function test_PreviewAndMaxWithdrawViews() external {
+        vm.prank(alice);
+        vault.deposit(1_000e18, alice);
+
+        assertEq(vault.previewDeposit(100e18), 100e18);
+        assertEq(vault.maxWithdrawableAssets(), 1_000e18);
+    }
+
     function test_RedeemWhenLiquidityConstrained() external {
         vm.prank(alice);
         uint256 shares = vault.deposit(1_000e18, alice);
@@ -96,6 +135,18 @@ contract StrategyVaultTest is Test {
         vm.prank(alice);
         vm.expectRevert(StrategyVault.StrategyVault__InsufficientLiquidAssets.selector);
         vault.redeem(shares, alice);
+    }
+
+    function test_RevertWhen_SetHookZeroAddress() external {
+        vm.prank(owner);
+        vm.expectRevert(StrategyVault.StrategyVault__ZeroAddress.selector);
+        vault.setHook(address(0));
+    }
+
+    function test_RevertWhen_SetLockedLiquidityAboveTotalAssets() external {
+        vm.prank(owner);
+        vm.expectRevert(StrategyVault.StrategyVault__InsufficientLiquidAssets.selector);
+        vault.setLockedLiquidityAssets(1);
     }
 
     function test_ReportAmmFeeYieldIncreasesSharePrice() external {
@@ -134,6 +185,64 @@ contract StrategyVaultTest is Test {
 
         assertEq(applied, 50e18);
         assertGt(priceAfter, priceBefore);
+    }
+
+    function test_DeterministicYieldHonorsMaxAmount() external {
+        vm.prank(owner);
+        vault.setHook(owner);
+
+        vm.prank(alice);
+        vault.deposit(1_000e18, alice);
+
+        vm.prank(owner);
+        vault.fundRebateReserve(200e18);
+
+        vm.prank(owner);
+        vault.notifySwapVolume(bytes32(uint256(2)), 5_000e18, alice);
+
+        uint256 applied = vault.applyDeterministicYield(10e18);
+        assertEq(applied, 10e18);
+        assertEq(vault.pendingStrategyYield(), 40e18);
+    }
+
+    function test_DeterministicYieldWhenPendingExceedsReserve() external {
+        vm.prank(owner);
+        vault.setHook(owner);
+
+        vm.prank(alice);
+        vault.deposit(1_000e18, alice);
+
+        vm.prank(owner);
+        vault.fundRebateReserve(10e18);
+
+        vm.prank(owner);
+        vault.notifySwapVolume(bytes32(uint256(3)), 5_000e18, alice);
+
+        uint256 applied = vault.applyDeterministicYield(0);
+        assertEq(applied, 10e18);
+        assertEq(vault.rebateReserveAssets(), 0);
+        assertEq(vault.pendingStrategyYield(), 40e18);
+    }
+
+    function test_RevertWhen_NotifySwapVolumeCalledByNonHook() external {
+        vm.prank(owner);
+        vault.setHook(owner);
+
+        vm.prank(alice);
+        vm.expectRevert(StrategyVault.StrategyVault__OnlyHook.selector);
+        vault.notifySwapVolume(bytes32(uint256(1)), 100e18, alice);
+    }
+
+    function test_RevertWhen_DepositRoundsToZeroShares() external {
+        vm.prank(alice);
+        vault.deposit(1_000e18, alice);
+
+        vm.prank(owner);
+        vault.reportAmmFeeYield(10_000_000e18);
+
+        vm.prank(bob);
+        vm.expectRevert(StrategyVault.StrategyVault__InsufficientShares.selector);
+        vault.deposit(1, bob);
     }
 
     function test_RevertWhen_UnauthorizedMintBurn() external {

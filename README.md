@@ -69,6 +69,12 @@ npm install
 npm --workspace frontend run dev
 ```
 
+## Coverage
+Production contracts are enforced at 100% coverage with:
+```bash
+bash scripts/check_coverage.sh
+```
+
 ## Demo Commands
 ```bash
 make demo-local
@@ -87,9 +93,33 @@ make demo-all
 
 ## Deployment
 - Local Anvil: `forge script script/10_DeployStrategySystem.s.sol:DeployStrategySystemScript --rpc-url http://127.0.0.1:8545 --broadcast`
-- Testnet (Base Sepolia preferred): set `.env`, then run `make demo-testnet`
+- Testnet (Unichain Sepolia supported): set `.env`, then run `make demo-testnet`
 
 If explorer URL is unknown for a chain, output is marked `TBD` and raw tx hashes are printed.
+
+### Deployed Addresses
+Populate from `.env` after `make demo-testnet`:
+
+| Component | Address |
+|---|---|
+| Demo Underlying | `UNDERLYING_ASSET` |
+| StrategyVault | `STRATEGY_VAULT` |
+| YieldToken | `YIELD_TOKEN` |
+| StrategyHook | `STRATEGY_HOOK` |
+| StrategyRegistry | `STRATEGY_REGISTRY` |
+| LendingAdapterMock | `LENDING_ADAPTER` |
+| SecondaryMarketMock | `SECONDARY_MARKET` |
+
+### Testnet Demo Sequence
+```bash
+cp .env.example .env
+# set owner/private key/rpc vars
+make demo-testnet
+```
+`demo-testnet` prints:
+- all deployment tx hashes + explorer URLs
+- user-flow tx hashes + explorer URLs
+- judge summary (deposit, shares, share price before/after, redeem amount, secondary trade, borrow/repay)
 
 ## Security Notes
 - Hook entrypoints are restricted by `onlyPoolManager`.

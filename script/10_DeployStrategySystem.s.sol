@@ -12,6 +12,7 @@ import {StrategyHook} from "src/StrategyHook.sol";
 import {StrategyVault} from "src/StrategyVault.sol";
 import {StrategyRegistry} from "src/StrategyRegistry.sol";
 import {LendingAdapterMock} from "src/mocks/LendingAdapterMock.sol";
+import {SecondaryMarketMock} from "src/mocks/SecondaryMarketMock.sol";
 import {IStrategyVaultHookReceiver} from "src/interfaces/IStrategyVaultHookReceiver.sol";
 import {IStrategyVaultViews} from "src/interfaces/IStrategyVaultViews.sol";
 
@@ -41,22 +42,21 @@ contract DeployStrategySystemScript is Script {
 
         StrategyRegistry registry = new StrategyRegistry(initialOwner);
         LendingAdapterMock lending = new LendingAdapterMock(vault.yieldToken(), IStrategyVaultViews(address(vault)), 7000);
+        SecondaryMarketMock secondary = new SecondaryMarketMock(vault.yieldToken(), IERC20(underlyingAsset));
 
-        if (initialOwner == msg.sender) {
-            vault.setHook(address(hook));
+        vault.setHook(address(hook));
 
-            bytes32 strategyId = keccak256(abi.encode(address(vault), address(hook), underlyingAsset, block.chainid));
-            registry.setAllowedCreator(initialOwner, true);
-            registry.registerStrategy(
-                strategyId,
-                address(vault),
-                address(hook),
-                underlyingAsset,
-                address(vault.yieldToken()),
-                3000,
-                "ipfs://tokenized-strategy-spec"
-            );
-        }
+        bytes32 strategyId = keccak256(abi.encode(address(vault), address(hook), underlyingAsset, block.chainid));
+        registry.setAllowedCreator(initialOwner, true);
+        registry.registerStrategy(
+            strategyId,
+            address(vault),
+            address(hook),
+            underlyingAsset,
+            address(vault.yieldToken()),
+            3000,
+            "ipfs://tokenized-strategy-spec"
+        );
 
         vm.stopBroadcast();
 
@@ -65,5 +65,6 @@ contract DeployStrategySystemScript is Script {
         console2.log("StrategyHook", address(hook));
         console2.log("StrategyRegistry", address(registry));
         console2.log("LendingAdapterMock", address(lending));
+        console2.log("SecondaryMarketMock", address(secondary));
     }
 }

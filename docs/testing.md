@@ -3,6 +3,7 @@
 forge test
 forge test --match-test test_EndToEndYieldLifecycle -vvv
 forge coverage
+bash scripts/check_coverage.sh
 ```
 
 Coverage includes:

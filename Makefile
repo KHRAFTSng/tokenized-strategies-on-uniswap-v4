@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: bootstrap test coverage build demo-local demo-testnet demo-yield demo-secondary demo-all verify-deps verify-commits export-abis frontend
+.PHONY: bootstrap test coverage build demo-local demo-testnet demo-yield demo-secondary demo-all verify-deps verify-commits export-abis frontend check-coverage
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -10,6 +10,9 @@ test:
 
 coverage:
 	forge coverage
+
+check-coverage:
+	bash scripts/check_coverage.sh
 
 build:
 	forge build

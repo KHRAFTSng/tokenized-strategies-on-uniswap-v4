@@ -10,6 +10,7 @@
     "build": "forge build && npm --workspace frontend run build",
     "test": "forge test",
     "coverage": "forge coverage",
+    "check:coverage": "bash scripts/check_coverage.sh",
     "verify:deps": "bash scripts/verify_deps.sh",
     "verify:commits": "bash scripts/verify_commits.sh 78",
     "export:abis": "bash scripts/export_abis.sh"

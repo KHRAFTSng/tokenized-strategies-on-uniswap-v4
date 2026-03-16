@@ -169,8 +169,32 @@ contract StrategyHookTest is BaseTest {
         });
     }
 
+    function test_SetSenderAllowlistAndVault() external {
+        hook.setSenderAllowlist(address(swapRouter), true);
+        assertTrue(hook.senderAllowlist(address(swapRouter)));
+
+        MockVaultReceiver newReceiver = new MockVaultReceiver();
+        hook.setVault(newReceiver);
+        assertEq(address(hook.vault()), address(newReceiver));
+    }
+
+    function test_RevertWhen_SetVaultZeroAddress() external {
+        vm.expectRevert(StrategyHook.StrategyHook__ZeroAddress.selector);
+        hook.setVault(IStrategyVaultHookReceiver(address(0)));
+    }
+
     function test_RevertWhen_PermissionBitsMismatch() external {
         vm.expectRevert();
         new StrategyHook(poolManager, address(this), receiver);
+    }
+
+    function test_RevertWhen_ConstructorVaultIsZero() external {
+        address flags = address(
+            uint160(Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_SWAP_FLAG) ^ (uint160(0x7777) << 144)
+        );
+        bytes memory constructorArgs = abi.encode(poolManager, address(this), IStrategyVaultHookReceiver(address(0)));
+
+        vm.expectRevert(StrategyHook.StrategyHook__ZeroAddress.selector);
+        deployCodeTo("StrategyHook.sol:StrategyHook", constructorArgs, flags);
     }
 }
