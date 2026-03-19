@@ -264,13 +264,20 @@ make demo-local
 Core contracts lines: 100.00% (163/163)
 Core contracts branches: 100.00% (26/26)
 Core contracts functions: 100.00% (35/35)
-All src aggregate (including demo mocks): lines 98.44%, branches 100.00%, functions 96.08%
+Core contracts statements: 100.00% (161/161)
 ```
 
 ```bash
 # enforce core-contract coverage gate
 bash scripts/check_coverage.sh
+
+# reproduce forge coverage table with IR-minimum mapping
+FOUNDRY_OFFLINE=true forge coverage --ir-minimum --color always
 ```
+
+Coverage screenshot (`forge coverage --ir-minimum`):
+
+![Forge Coverage IR Minimum](assets/forge-coverage-ir-minimum.png)
 
 - `unit`: Function-level behavior and revert-path validation across vault/hook/registry/token.
 - `edge-case`: Donation attack, dust minting boundary, liquidity-constrained redeem, policy mismatch.
