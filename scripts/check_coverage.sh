@@ -5,7 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 LCOV_OUT="/tmp/strategy_coverage.lcov"
-forge coverage --report lcov --exclude-tests --no-match-coverage "(script/|test/|src/interfaces/)" -r "$LCOV_OUT" >/tmp/strategy_coverage.log 2>&1
+# Work around a Foundry macOS panic in online signature lookup by running coverage offline.
+FOUNDRY_OFFLINE=true forge coverage --report lcov --exclude-tests --no-match-coverage "(script/|test/|src/interfaces/)" -r "$LCOV_OUT" >/tmp/strategy_coverage.log 2>&1
 
 python3 - <<'PY'
 import sys
